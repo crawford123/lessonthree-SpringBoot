@@ -1,0 +1,195 @@
+
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+
+<mapper namespace="com.paul.mappers.StudentMapper">
+
+    <resultMap id="AddressResult" type="Address">
+        <id  column="addrId" property="addrId"/>
+        <result column="street" property="street"/>
+        <result column="city" property="city"/>
+        <result column="state" property="state"/>
+        <result column="zip" property="zip"/>
+        <result column="country" property="country"/>
+    </resultMap>
+
+    <resultMap id="CourseResult" type="Course">
+        <id  column="course_id" property="courseId"/>
+        <result column="name" property="name"/>
+        <result column="description" property="description"/>
+        <result column="start_date" property="startDate"/>
+        <result column="end_date" property="endDate"/>
+    </resultMap>
+   <!-- 使用内嵌结果ResultMap实现一对多映射-->
+    <!-- <resultMap id="TutorResult" type="Tutor">
+           <id column="tutor_id" property="tutorId"/>
+           <result column="tutor_name" property="name" />
+           <result column="email" property="email" />
+           <association property="address" resultMap="AddressResult"/>
+           <collection property="courses"  resultMap="CourseResult"/>
+     </resultMap>
+      <select id="findTutorById" parameterType="int"  resultMap="TutorResult">
+       SELECT T.TUTOR_ID, T.NAME AS TUTOR_NAME, EMAIL, C.COURSE_ID,
+       C.NAME, DESCRIPTION, START_DATE, END_DATE
+       FROM TUTORS T LEFT OUTER JOIN ADDRESSES A ON T.ADDR_ID=A.ADDR_ID
+       LEFT OUTER JOIN COURSES C ON T.TUTOR_ID=C.TUTOR_ID
+       WHERE T.TUTOR_ID=#{tutorId}
+        </select>
+       -->
+
+  <!--  使用嵌套Select语句实现一对多映射-->
+    <resultMap id="TutorResult" type="Tutor">
+        <id column="tutor_id" property="tutorId"/>
+        <result column="tutor_name" property="name" />
+        <result column="email" property="email" />
+        <association property="address" resultMap="AddressResult"/>
+        <collection property="courses"  column="tutor_id" select="findCoursesByTutor"/>
+    </resultMap>
+
+      <select id="findTutorById" parameterType="int" resultMap="TutorResult">
+            SELECT T.TUTOR_ID, T.NAME AS TUTOR_NAME, EMAIL
+    FROM TUTORS T WHERE T.TUTOR_ID=#{tutorId}
+      </select>
+
+    <select id="findCoursesByTutor" parameterType="int" resultMap="CourseResult">
+
+        SELECT  * FROM COURSES WHERE TUTOR_ID=#{tutorId}
+    </select>
+
+  <!--  if条件-->
+      <select id="searchCourses" parameterType="hashmap" resultMap="CourseResult">
+
+               SELECT * FROM COURSES
+                       WHERE TUTOR_ID = #{tutorId}
+
+      <if test="courseName != null">
+
+          AND NAME LIKE #{courseName}
+      </if>
+
+          <if test="startDate !=null">
+
+        AND  START_DATE >= #{startDate}
+          </if>
+
+      <!--    <if test="endDate !=null">
+
+              AND  END_DATE <= #{endDate}
+          </if>-->
+
+
+      </select>
+
+   <!-- choose,when 和otherwise 条件-->
+    <select id="searchCourses" parameterType="hashmap" resultMap="CourseResult">
+     SELECT  * FROM  COURSES
+     <choose>
+         <when test="searchBy == 'Tutor'">
+         WHERE TUTOR_ID= #{tutorId}
+         </when>
+
+         <when test="searchBy == 'CourseName'">
+             WHERE  name LIKE #{courseName}
+         </when>
+         <otherwise>
+             WHERE  TUTOR start_date >=now()
+         </otherwise>
+     </choose>
+
+    </select>
+
+    <!--where条件-->
+    <select id="searchCourseWhere" parameterType="hashmap" resultMap="CourseResult">
+         SELECT  * FROM  COURSES
+         <where>
+             <if test="tutorId !=null">
+                 TUTOR_ID = {tutorId}
+             </if>
+             <if test="courseName !=null">
+                 AND name= {courseName}
+             </if>
+             <if test="startDate !=null">
+                 AND  start_date >= {startDate}
+             </if>
+             <if test="endDate !=null">
+                 AND  end_date <= #{endDate}
+             </if>
+
+         </where>
+
+    </select>
+
+   <!-- <trim>条件-->
+    <select id="searchCourses" parameterType="hashmap" resultMap="CourseResult">
+         SELECT  * FROM  COURSES
+         <trim prefix="WHERE" prefixOverrides="AND | OR">
+           <if test="tutorId !=null">
+               TUTOR_ID=#{tutorId}
+           </if>
+
+             <if test="courseName !=null">
+                 AND  name LIKE  #{courseName}
+             </if>
+         </trim>
+    </select>
+
+   <!-- set条件-->
+    <update id="updateStudent" parameterType="Student">
+        upate students
+        <set>
+            <if test="name!=null"> name=#{name}</if>
+            <if test="email!=null">email=#{email}</if>
+            <if test="phone!=null">phone=#{phone}</if>
+
+        </set>
+
+        WHERE stud_id=#{id}
+    </update>
+
+ <!--   foreach循环-->
+      <select id="searchCoursesByTutors" parameterType="map" resultMap="CourseResult">
+          SELECT  * FROM COURSES
+          <if test="tutorIds !=null">
+              <where>
+                  <foreach collection="tutorIds" item="tutorId">
+                      OR tutor_id=#{tutorId}
+
+                  </foreach>
+
+              </where>
+
+
+          </if>
+
+      </select>
+
+    <!--使用<foreach>生成IN子句-->
+    <select id="searchCoursesByTutors" parameterType="map"  resultMap="CourseResult">
+        SELECT * FROM COURSES
+        <if test="tutorIds !=null">
+            <where>
+                tutor_id IN
+                    <foreach collection="tutorIds" item="tutorId" open="(" separator="," close=")" >
+                        #{tutorId}
+                    </foreach>
+
+
+
+            </where>
+
+
+        </if>
+
+    </select>
+    
+    
+    <insert id="insertStudent" parameterType="Student" useGeneratedKeys="true" keyProperty="studId">
+      INSERT  INTO  students(name,email,addr_id,gender)
+      VALUES (#{name},#{email},#{address.addrId},#{gender})
+
+    </insert>
+
+
+</mapper>

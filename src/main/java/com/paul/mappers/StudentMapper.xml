@@ -1,0 +1,213 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.paul.mappers.StudentMapper">
+    <resultMap id="StudentResult" type="Student">
+        <id property="studId" column="stud_id"/>
+        <result property="name" column="name"/>
+        <result property="email" column="email" />
+        <result property="dob" column="dob" />
+    </resultMap>
+  <!--  通过resultMap的方式-->
+    <select id="findAllStudents" resultMap="StudentResult">
+
+        SELECT * FROM STUDENTS
+    </select>
+    <!--  通过resultType的方式-->
+    <select id="findAllStudentsType" resultType="Student">
+
+        SELECT STUD_ID AS studId, NAME,EMAIL, PHONE FROM STUDENTS
+    </select>
+
+    <!--  通过resultType的方式-->
+    <select id="findAllStudentsMap" resultType="map">
+
+        SELECT STUD_ID AS studId, NAME,EMAIL, PHONE FROM STUDENTS
+    </select>
+
+
+    <!--  通过resultType的方式-->
+    <select id="findStudentById" parameterType="int" resultType="Student">
+     SELECT  STUD_ID AS STUDID, NAME, EMAIL, DOB FROM STUDENTS WHERE STUD_ID=#{studId}
+</select>
+    <!--  通过resultMap的方式-->
+    <select id="findStudentById" parameterType="int" resultMap="StudentResult">
+        SELECT  * FROM STUDENTS WHERE STUD_ID=#{studId}
+    </select>
+
+    <select id="findStudentByIdMap" parameterType="int" resultType="map">
+        SELECT * FROM STUDENTS WHERE STUD_ID=#{studId}
+    </select>
+
+    <!--让STUD_ID列的值自增-->
+    <insert id="insertStudent" parameterType="Student" useGeneratedKeys="true" keyProperty="studId" flushCache="true">
+        INSERT  INTO STUDENTS(NAME,EMAIL,DOB) VALUES(#{name},#{email},#{dob})
+    </insert>
+    <!--让STUD_ID列的值自增(Oracle),使用序列（SEQUENCE）来生成主键值。-->
+    <insert id="insertStudentSequence" parameterType="Student">
+        <selectKey keyProperty="studId" resultType="int" order="BEFORE">
+            SELECT ELEARNING.STUD_ID_SEQ.NEXTVAL FROM DUAL
+        </selectKey>
+        INSERT INTO STUDENTS(STUD_ID,NAME,EMAIL,PHONE) VALUE (#{studId},#{name},#{email},#{phone})
+    </insert>
+    <!--让STUD_ID列的值自增(Oracle),使用序列（SEQUENCE）来生成主键值。我们也可以在获取序列的下一个值时，使用触发器（trigger）来设置主键值，并且在执行INSERT SQL语句之后将值设置到主键列上-->
+    <insert id="insertStudentSequenceTrigger"  parameterType="Student">
+        <selectKey order="AFTER" resultType="int" keyProperty="studId">
+             SELECT ELEARNING.STUD_ID_SEQ.CURRVAL FROM DUAL
+        </selectKey>
+        INSERT INTO STUDENTS(NAME,EMAIL,PHONE) VALUE (#{name},#{email},#{phone})
+    </insert>
+    <update id="updateStudent" parameterType="Student"  flushCache="true">
+     UPDATE  STUDENTS SET NAME=#{name},EMAIL=#{email},DOB=#{dob}
+     WHERE STUD_ID=#{studId}
+
+    </update>
+    <delete id="deleteStudent" parameterType="int"  flushCache="true">
+        DELETE  FROM STUDENTS WHERE STUD_ID=#{studId}
+    </delete>
+    <select id="finaAllStudentByNameEmail" resultType="StudentResult">
+        SELECT  stu_id,name,email,dob from Students WHERE name=#{param1} AND email=#{param2}
+
+
+    </select>
+
+   <!-- 多行结果集映射成Map-->
+    <select id="findAllStudentMap" resultMap="StudentResult">
+        SELECT  *FROM  Students
+    </select>
+
+   <!-- 使用RowBounds对结果集进行分页-->
+    <select id="findAllStudentRow" resultMap="StudentResult" flushCache="false" useCache="true">
+        SELECT  *FROM  Students
+    </select>
+     <!--&lt;!&ndash;拓展ResultMap&ndash;&gt;
+    <resultMap id="StudentResult" type="Student">
+         <id property="studId" column="stud_id"/>
+         <result property="name" column="name"/>
+         <result property="email" column="email" />
+         <result property="phone" column="phone" />
+    </resultMap>
+    <resultMap id="StudentWithAddressResult" type="Student" extends="StudentResult">
+        <result property="address.addrId" column="addr_id"/>
+        <result property="address.street" column="street" />
+        <result property="address.city" column="city" />
+        <result property="address.state" column="state" />
+        <result property="address.zip" column="zip" />
+        <result property="address.country" column="country" />
+    </resultMap>
+   &lt;!&ndash; 映射Student数据&ndash;&gt;
+    <select id="findStudentById" resultMap="StudentResult" parameterType="int">
+
+         SELECT * FROM STUDENTS WHERE STUD_ID=#{studId}  
+    </select>
+    &lt;!&ndash;映射Student数据和Address数据&ndash;&gt;
+    <select id="selectStudentWithAddress" resultMap="StudentWithAddressResult" parameterType="int">
+      SELECT  STUD_ID,NAME,EMAIL,PHONE,A.ADDR_ID,STREET,CITY,STATE,ZIP,COUNTRY
+           FROM STUDENT S LEFT OUTER JOIN ADDRESS A ON S.ADDR_ID=A.ADDR_ID
+           WHERE  STUD_ID=#{studId}
+    </select>-->
+
+   <!--  &lt;!&ndash; 将student和address两个结果集合并&ndash;&gt;
+       <resultMap id="StudentWithAddressResult" type="Student">
+        <id property="studId" column="stud_id"/>
+        <result property="name" column="name"/>
+        <result property="email" column="email" />
+        <result property="phone" column="phone" />
+        <result property="address.addrId" column="addr_id"/>
+        <result property="address.street" column="street" />
+        <result property="address.city" column="city" />
+        <result property="address.state" column="state" />
+        <result property="address.zip" column="zip" />
+        <result property="address.country" column="country" />
+       </resultMap>
+       <select id="selectStudentWithAddress" parameterType="int" resultMap="StudentWithAddressResult">
+
+          SELECT STUD_ID, NAME, EMAIL,PHONE,A.ADDR_ID, STREET, CITY, STATE,
+        ZIP, COUNTRY
+     FROM STUDENTS S LEFT OUTER JOIN ADDRESSES A ON
+        S.ADDR_ID=A.ADDR_ID
+       WHERE STUD_ID=#{studId}
+
+       </select>-->
+
+       <!-- &lt;!&ndash;使用嵌套结果ResultMap实现一对一关系映射&ndash;&gt;
+    <resultMap type="Address" id="AddressResult">
+        <id property="addrId" column="addr_id" />
+        <result property="street" column="street" />
+        <result property="city" column="city" />
+        <result property="state" column="state" />
+        <result property="zip" column="zip" />
+        <result property="country" column="country" />
+    </resultMap>
+    <resultMap id="StudentWithAddressResult " type="Student">
+        <id property="studId" column="stud_id"/>
+        <result property="name" column="name"/>
+        <result property="email" column="email"/>
+        <association property="address" resultMap="AddressResult"/>
+    </resultMap>
+  <select id="findStudentWithAddress" parameterType="int" resultMap="StudentWithAddressResult">
+         SELECT STUD_ID, NAME, EMAIL, A.ADDR_ID, STREET, CITY, STATE,
+    ZIP, COUNTRY
+    FROM STUDENTS S LEFT OUTER JOIN ADDRESSES A ON
+    S.ADDR_ID=A.ADDR_ID
+    WHERE STUD_ID=#{studId}
+  </select>-->
+
+   <!-- &lt;!&ndash;使用<association>定义内联的resultMap&ndash;&gt;
+    <resultMap id="Student" type="StudentWithAddressResult">
+        <id property="studId" column="stud_id" />
+        <result property="name" column="name" />
+        <result property="email" column="email" />
+        <association property="address" javaType="Address">
+            <id property="addrId" column="addr_id" />
+            <result property="street" column="street" />
+            <result property="city" column="city" />
+            <result property="state" column="state" />
+            <result property="zip" column="zip" />
+            <result property="country" column="country" />
+        </association>
+    </resultMap>
+    &lt;!&ndash;使用嵌套结果ResultMap方式，关联的数据可以通过简单的查询语句（如果需要的话，需要与joins 连接操作配合）进行加载。&ndash;&gt;
+    <select id="findStudentWithAddress" parameterType="int" resultMap="StudentWithAddressResult">
+        SELECT STUD_ID, NAME, EMAIL, A.ADDR_ID, STREET, CITY, STATE,
+        ZIP, COUNTRY
+        FROM STUDENTS S LEFT OUTER JOIN ADDRESSES A ON
+        S.ADDR_ID=A.ADDR_ID
+        WHERE STUD_ID=#{studId}findStudentWithAddress
+    </select>-->
+
+    <!--&lt;!&ndash;使用嵌套查询实现一对一关系映射&ndash;&gt;
+    <resultMap type="Address" id="AddressResult">
+        <id property="addrId" column="addr_id" />
+        <result property="street" column="street" />
+        <result property="city" column="city" />
+        <result property="state" column="state" />
+        <result property="zip" column="zip" />
+        <result property="country" column="country" />
+    </resultMap>
+    <select id="findAddressById" parameterType="int" resultMap="AddressResult">
+
+        SELECT  * FROM  ADDRESSES WHERE ADDR_ID=#{id}
+    </select>
+    <resultMap type="Student" id="StudentWithAddressResult">
+        <id property="studId" column="stud_id" />
+        <result property="name" column="name" />
+        <result property="email" column="email" />
+        <association property="address" column="addr_id" select="findAddressById"/>
+    </resultMap>
+    <select id="findStudentWithAddress" resultMap="StudentWithAddressResult" parameterType="int">
+
+       SELECT  * FROM  STUDENTS WHERE STUD_ID=#{studId}
+    </select>
+-->
+
+
+
+
+
+
+
+    <!--使用<cache />元素添加全局二级缓存-->
+    <cache eviction="FIFO" flushInterval="60000" size="512" readOnly="true">
+    </cache>
+</mapper>

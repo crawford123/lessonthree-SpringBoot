@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE configuration PUBLIC "-//mybatis.org//DTD Config 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-config.dtd">
+<configuration>
+   <!-- <properties resource="application.properties/>-->
+     <typeAliases>
+         <typeAlias alias="Student" type="com.paul.entity.Student"/>
+         <typeAlias alias="UserPic" type="com.paul.entity.UserPic"/>
+         <typeAlias alias="Integer" type="java.lang.Integer" />
+         <typeAlias alias="Long" type="java.lang.Long" />
+         <typeAlias alias="HashMap" type="java.util.HashMap" />
+         <typeAlias alias="LinkedHashMap" type="java.util.LinkedHashMap" />
+         <typeAlias alias="ArrayList" type="java.util.ArrayList" />
+         <typeAlias alias="LinkedList" type="java.util.LinkedList" />
+     </typeAliases>
+    <typeHandlers>
+        <typeHandler handler="com.paul.typehandler.PhoneTypeHandler"/>
+        <typeHandler handler="org.apache.ibatis.type.EnumOrdinalTypeHandler" javaType="com.paul.entity.Gender"/>
+    </typeHandlers>
+    <environments default="development">
+        <environment id="development">
+            <transactionManager type="JDBC"/>
+            <dataSource type="POOLED">
+                <property name="driver" value="com.mysql.jdbc.Driver"/>
+                <property name="url" value="jdbc:mysql://localhost:3306/test?charcaacterEncoding=utf8"/>
+                <property name="username" value="root"/>
+                <property name="password" value="123456"/>
+            </dataSource>
+        </environment>
+    </environments>
+    <mappers>
+        <mapper resource="com/paul/mappers/StudentMapper.xml"/>
+       <!-- <mapper url="file:///D:/mybatisdemo/app/mappers/TutorMapper.xml" />-->
+        <mapper class="com.paul.entity.StudentMapper"/>
+        <package name="com.paul.mappers" />
+    </mappers>
+
+ <!--   <settings>
+        <setting name="cacheEnabled" value="true" />
+        <setting name="lazyLoadingEnabled" value="true" />
+        <setting name="multipleResultSetsEnabled" value="true" />
+        <setting name="useColumnLabel" value="true" />
+        <setting name="useGeneratedKeys" value="false" />
+        <setting name="autoMappingBehavior" value="PARTIAL" />
+        <setting name="defaultExecutorType" value="SIMPLE" />
+        <setting name="defaultStatementTimeout" value="25000" />
+        <setting name="safeRowBoundsEnabled" value="false" />
+        <setting name="mapUnderscoreToCamelCase" value="false" />
+        <setting name="localCacheScope" value="SESSION" />
+        <setting name="jdbcTypeForNull" value="OTHER" />
+        <setting name="lazyLoadTriggerMethods" value="equals,clone,hashCode ,toString" />
+    </settings>-->
+
+</configuration>
